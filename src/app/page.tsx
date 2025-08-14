@@ -92,8 +92,8 @@ export default function Home() {
           date: normalizedDate,
           category: obj.category,
           amount: Number(obj.amount),
-          memo: obj.memo,
-          payer: obj.payer,
+          memo: obj.memo || "",
+          payer: obj.payer || "夫", // payerがない場合は「夫」をデフォルト値として設定
         } as Entry;
       });
       const newEntries = [...entriesToAdd, ...entries];

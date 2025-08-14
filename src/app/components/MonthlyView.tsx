@@ -50,7 +50,12 @@ export default function MonthlyView({ entries, onDelete, onEdit, onCopy }: Month
     monthEntries.forEach(e => {
       map.set(e.category, (map.get(e.category) || 0) + e.amount);
     });
-    return Array.from(map.entries()).map(([name, value]) => ({ name, value }));
+    const total = Array.from(map.values()).reduce((sum, val) => sum + val, 0);
+    return Array.from(map.entries()).map(([name, value]) => ({ 
+      name, 
+      value,
+      percentage: total > 0 ? Math.round((value / total) * 100) : 0
+    }));
   }, [monthEntries]);
 
   // 月別推移
@@ -124,12 +129,30 @@ export default function MonthlyView({ entries, onDelete, onEdit, onCopy }: Month
               <Typography variant="subtitle2" gutterBottom>カテゴリ別支出</Typography>
               <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
-                  <Pie data={categoryData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                  <Pie 
+                    data={categoryData} 
+                    dataKey="value" 
+                    nameKey="name" 
+                    cx="50%" 
+                    cy="50%" 
+                    outerRadius={80} 
+                    label={({ name, value }) => {
+                      if (value === undefined) return name;
+                      const total = categoryData.reduce((sum, d) => sum + d.value, 0);
+                      const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                      return `${name}\n¥${value.toLocaleString()} (${percentage}%)`;
+                    }}
+                  >
                     {categoryData.map((_, i) => (
                       <Cell key={i} fill={COLORS[i % COLORS.length]} />
                     ))}
                   </Pie>
-                  <ChartTooltip />
+                  <ChartTooltip 
+                    formatter={(value: number, name: string) => [
+                      `¥${value.toLocaleString()} (${categoryData.find(d => d.name === name)?.percentage}%)`,
+                      name
+                    ]}
+                  />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
@@ -151,9 +174,9 @@ export default function MonthlyView({ entries, onDelete, onEdit, onCopy }: Month
                 <Table size="small">
                   <TableHead>
                     <TableRow>
-                      <TableCell>日付</TableCell>
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}>日付</TableCell>
                       <TableCell>カテゴリ</TableCell>
-                      <TableCell>金額</TableCell>
+                      <TableCell align="right">金額</TableCell>
                       <TableCell>メモ</TableCell>
                       <TableCell>支払者</TableCell>
                       <TableCell>操作</TableCell>
@@ -163,9 +186,9 @@ export default function MonthlyView({ entries, onDelete, onEdit, onCopy }: Month
                   <TableBody>
                     {monthEntries.map((entry) => (
                       <TableRow key={entry.id}>
-                        <TableCell>{entry.date}</TableCell>
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}>{entry.date}</TableCell>
                         <TableCell>{entry.category}</TableCell>
-                        <TableCell>{entry.amount.toLocaleString()}</TableCell>
+                        <TableCell align="right">¥{entry.amount.toLocaleString()}</TableCell>
                         <TableCell>{entry.memo}</TableCell>
                         <TableCell>{entry.payer}</TableCell>
                         <TableCell>
