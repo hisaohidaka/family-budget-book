@@ -12,7 +12,8 @@ import Tooltip from "@mui/material/Tooltip";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#A28BFE", "#FF6699", "#FFB347", "#B0E57C", "#FF6666"];
 
-function getMonth(dateStr: string) {
+function getMonth(dateStr: string | undefined) {
+  if (!dateStr) return "";
   return dateStr.slice(0, 7); // YYYY-MM
 }
 
@@ -29,14 +30,18 @@ export default function MonthlyView({ entries, onDelete, onEdit, onCopy }: Month
 
   // 利用可能な月を取得
   const availableMonths = useMemo(() => {
-    const months = Array.from(new Set(entries.map(e => getMonth(e.date)))).sort().reverse();
+    const months = Array.from(new Set(entries
+      .filter(e => e.date) // dateが存在するエントリのみフィルタ
+      .map(e => getMonth(e.date))
+      .filter(Boolean) // 空文字列を除外
+    )).sort().reverse();
     return months;
   }, [entries]);
 
   // 選択された月のデータを取得
   const monthEntries = useMemo(() => {
     if (!selectedMonth) return [];
-    return entries.filter(e => getMonth(e.date) === selectedMonth);
+    return entries.filter(e => e.date && getMonth(e.date) === selectedMonth);
   }, [entries, selectedMonth]);
 
   // カテゴリ別集計
@@ -51,10 +56,14 @@ export default function MonthlyView({ entries, onDelete, onEdit, onCopy }: Month
   // 月別推移
   const monthlyData = useMemo(() => {
     const map = new Map<string, number>();
-    entries.forEach(e => {
-      const m = getMonth(e.date);
-      map.set(m, (map.get(m) || 0) + e.amount);
-    });
+    entries
+      .filter(e => e.date) // dateが存在するエントリのみフィルタ
+      .forEach(e => {
+        const m = getMonth(e.date);
+        if (m) { // 有効な月の場合のみ処理
+          map.set(m, (map.get(m) || 0) + e.amount);
+        }
+      });
     return Array.from(map.entries()).sort().map(([month, value]) => ({ month, value }));
   }, [entries]);
 

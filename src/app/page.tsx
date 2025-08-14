@@ -83,9 +83,13 @@ export default function Home() {
         header.forEach((h, i) => {
           obj[h.trim()] = cols[i]?.trim();
         });
+        
+        // 日付形式を統一
+        const normalizedDate = normalizeDate(obj.date);
+        
         return {
           id: uuidv4(),
-          date: obj.date,
+          date: normalizedDate,
           category: obj.category,
           amount: Number(obj.amount),
           memo: obj.memo,
@@ -101,33 +105,117 @@ export default function Home() {
     e.target.value = "";
   };
 
+  // 日付形式を統一する関数（スラッシュ区切り → ハイフン形式）
+  const normalizeDate = (dateStr: string): string => {
+    if (!dateStr) return "";
+    
+    // スラッシュ区切りの日付をハイフン形式に変換
+    if (dateStr.includes('/')) {
+      const parts = dateStr.split('/');
+      if (parts.length === 3) {
+        const year = parts[0].padStart(4, '0');
+        const month = parts[1].padStart(2, '0');
+        const day = parts[2].padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+    }
+    
+    // 既にハイフン形式の場合はそのまま返す
+    if (dateStr.includes('-')) {
+      return dateStr;
+    }
+    
+    return dateStr;
+  };
+
   const handlePasteImport = () => {
     if (!pasteText.trim()) return;
-    const lines = pasteText.split(/\r?\n/).filter(Boolean);
-    if (lines.length < 2) return;
-    // カンマまたはタブ区切り対応
-    const delimiter = lines[0].includes("\t") ? "\t" : ",";
-    const header = lines[0].split(delimiter);
-    const entriesToAdd: Entry[] = lines.slice(1).map(line => {
-      const cols = line.split(delimiter);
-      const obj: any = {};
-      header.forEach((h, i) => {
-        obj[h.trim()] = cols[i]?.trim();
-      });
-      return {
-        id: uuidv4(),
-        date: obj.date,
-        category: obj.category,
-        amount: Number(obj.amount),
-        memo: obj.memo,
-        payer: obj.payer,
-      } as Entry;
-    });
-    const newEntries = [...entriesToAdd, ...entries];
-    setEntries(newEntries);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newEntries));
-    setPasteText("");
-    setShowPasteArea(false);
+    
+    try {
+      const lines = pasteText.split(/\r?\n/).filter(Boolean);
+      if (lines.length < 2) {
+        alert("データが不足しています。ヘッダー行とデータ行が必要です。");
+        return;
+      }
+      
+      // カンマまたはタブ区切り対応
+      const delimiter = lines[0].includes("\t") ? "\t" : ",";
+      const header = lines[0].split(delimiter).map(h => h.trim());
+      
+      // 必須ヘッダーの確認
+      const requiredHeaders = ['date', 'category', 'amount', 'memo', 'payer'];
+      const missingHeaders = requiredHeaders.filter(h => !header.includes(h));
+      if (missingHeaders.length > 0) {
+        alert(`必須ヘッダーが不足しています: ${missingHeaders.join(', ')}`);
+        return;
+      }
+      
+      const entriesToAdd: Entry[] = [];
+      
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i];
+        const cols = line.split(delimiter);
+        
+        // 列数の確認
+        if (cols.length < header.length) {
+          console.warn(`行 ${i + 1} の列数が不足しています。スキップします。`);
+          continue;
+        }
+        
+        const obj: any = {};
+        header.forEach((h, index) => {
+          obj[h] = cols[index]?.trim() || "";
+        });
+        
+        // データの検証
+        if (!obj.date || !obj.category || !obj.amount || !obj.payer) {
+          console.warn(`行 ${i + 1} の必須データが不足しています。スキップします。`);
+          continue;
+        }
+        
+        // 日付形式を統一
+        const normalizedDate = normalizeDate(obj.date);
+        
+        // 日付の形式確認（ハイフン形式のみ）
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(normalizedDate)) {
+          console.warn(`行 ${i + 1} の日付形式が正しくありません (YYYY-MM-DD): ${obj.date} → ${normalizedDate}`);
+          continue;
+        }
+        
+        // 金額の数値確認
+        const amount = Number(obj.amount);
+        if (isNaN(amount) || amount <= 0) {
+          console.warn(`行 ${i + 1} の金額が正しくありません: ${obj.amount}`);
+          continue;
+        }
+        
+        entriesToAdd.push({
+          id: uuidv4(),
+          date: normalizedDate,
+          category: obj.category,
+          amount: amount,
+          memo: obj.memo || "",
+          payer: obj.payer,
+        });
+      }
+      
+      if (entriesToAdd.length === 0) {
+        alert("有効なデータが見つかりませんでした。データ形式を確認してください。");
+        return;
+      }
+      
+      const newEntries = [...entriesToAdd, ...entries];
+      setEntries(newEntries);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newEntries));
+      setPasteText("");
+      setShowPasteArea(false);
+      
+      alert(`${entriesToAdd.length}件のデータをインポートしました。`);
+      
+    } catch (error) {
+      console.error("貼り付けインポートエラー:", error);
+      alert("インポート中にエラーが発生しました。データ形式を確認してください。");
+    }
   };
 
   return (
