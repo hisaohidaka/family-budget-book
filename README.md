@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# family-budget-book
 
-## Getting Started
+夫婦の家計簿アプリ用のリポジトリ
 
-First, run the development server:
+## 概要
+
+このプロジェクトは、Next.jsで構築された夫婦の家計簿アプリです。月別の支出管理、グラフ表示、CSVインポート機能を提供します。
+
+## 主な機能
+
+- 📊 月別の支出データ管理
+- 📈 カテゴリ別支出の円グラフ表示
+- 📉 月別支出推移の棒グラフ表示
+- 📋 一覧表示とグラフ表示の切り替え
+- 📁 CSVファイルからのデータインポート
+- 📋 クリップボードからの貼り付けインポート
+- ✏️ データの編集・削除・コピー機能
+
+## 技術スタック
+
+- **フレームワーク**: [Next.js](https://nextjs.org)
+- **UIライブラリ**: Material-UI (MUI)
+- **グラフ**: Recharts
+- **言語**: TypeScript
+
+## セットアップ
+
+### 前提条件
+
+- Node.js 18.0.0以上
+- npm または yarn
+
+### インストール
 
 ```bash
+# 依存関係のインストール
+npm install
+
+# 開発サーバーの起動
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+ブラウザで [http://localhost:3000](http://localhost:3000) を開いてアプリを確認できます。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 使用方法
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. **データ入力**: 日付、カテゴリ、金額、メモ、支払者を入力して支出を記録
+2. **月別表示**: 月を選択して、その月のデータを表示
+3. **ビュー切り替え**: グラフ表示と一覧表示を切り替え
+4. **データ管理**: 編集、削除、コピー機能でデータを管理
+5. **CSVインポート**: CSVファイルやクリップボードからデータを一括インポート
 
-## Learn More
+## 開発
 
-To learn more about Next.js, take a look at the following resources:
+このプロジェクトは [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app) で作成されました。
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### ファイル構造
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+src/
+├── app/
+│   ├── components/          # UIコンポーネント
+│   │   ├── EntryForm/      # 入力フォーム関連
+│   │   ├── EntryTable/     # データテーブル関連
+│   │   └── MonthlyView.tsx # 月別ビュー（グラフ・一覧）
+│   ├── page.tsx            # メインページ
+│   ├── types.ts            # 型定義
+│   └── providers.tsx       # プロバイダー
+```
 
-## Deploy on Vercel
+## ライセンス
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+このプロジェクトはMITライセンスの下で公開されています。
