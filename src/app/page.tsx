@@ -5,6 +5,7 @@ import type { Entry } from "./types";
 import { v4 as uuidv4 } from "uuid";
 import { Box, Typography, Container, Button } from "@mui/material";
 import MonthlyView from "./components/MonthlyView";
+import CategoryTrendChart from "./components/CategoryTrendChart";
 
 const STORAGE_KEY = "kakeibo-entries";
 
@@ -76,12 +77,16 @@ export default function Home() {
       const text = event.target?.result as string;
       const lines = text.split(/\r?\n/).filter(Boolean);
       if (lines.length < 2) return;
-      const header = lines[0].split(",");
+      const rawHeader = lines[0].split(",");
+      // 空でないヘッダーのインデックスのみ抽出
+      const validHeaderIndexes = rawHeader.map((h, i) => h.trim() ? i : -1).filter(i => i !== -1);
+      const header = validHeaderIndexes.map(i => rawHeader[i].trim());
       const entriesToAdd: Entry[] = lines.slice(1).map(line => {
         const cols = line.split(",");
         const obj: any = {};
-        header.forEach((h, i) => {
-          obj[h.trim()] = cols[i]?.trim();
+        header.forEach((h, idx) => {
+          const colIdx = validHeaderIndexes[idx];
+          obj[h] = cols[colIdx]?.trim();
         });
         
         // 日付形式を統一
@@ -257,6 +262,7 @@ export default function Home() {
         isEdit={!!editEntry}
       />
       <MonthlyView entries={entries} onDelete={handleDelete} onEdit={handleEdit} onCopy={handleCopy} />
+      <CategoryTrendChart entries={entries} />
     </Container>
   );
 }
