@@ -104,6 +104,7 @@ export default function Home() {
       const newEntries = [...entriesToAdd, ...entries];
       setEntries(newEntries);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newEntries));
+      alert("CSVインポートが完了しました。");
     };
     reader.readAsText(file);
     // inputの値をリセットして同じファイルを再度選択できるように
